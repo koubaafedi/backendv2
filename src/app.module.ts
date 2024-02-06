@@ -5,6 +5,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { EventModule } from './event/event.module';
 import { JwtAuthGuard } from './common/jwt-auth.guard';
+import { User } from './user/entities/user.entity';
+import { Event } from './event/entities/event.entity';
 
 @Module({
   imports: [
@@ -12,12 +14,13 @@ import { JwtAuthGuard } from './common/jwt-auth.guard';
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({
-      type: 'postgres',
+      type: 'mysql',
       host: process.env.DATABASE_HOST,
       port: +process.env.DATABASE_PORT,
       username: process.env.DATABASE_USERNAME,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_DATABASE,
+      entities: [User, Event],
       autoLoadEntities: true,
       synchronize: true,
     }),

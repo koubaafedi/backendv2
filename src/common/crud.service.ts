@@ -10,7 +10,7 @@ export class CrudService<T extends HasIdInterface> {
     return await this.repository.find();
   }
 
-  async remove(id: string): Promise<void> {
-    await this.repository.delete(id);
-  }
+  // async remove(id: string): Promise<void> {
+  //   await this.repository.delete(id);
+  // }
 }

@@ -11,7 +11,8 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { Public } from 'src/common/public-decorator';
+import { Public } from 'src/common/public.decorator';
+import { UserDecorator } from 'src/common/user.decorator';
 
 @Controller('user')
 export class UserController {
@@ -39,12 +40,16 @@ export class UserController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(id, updateUserDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @UserDecorator() user,
+  ) {
+    return this.userService.update(id, updateUserDto, user);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(id);
+  remove(@Param('id') id: string, @UserDecorator() user) {
+    return this.userService.remove(id, user);
   }
 }

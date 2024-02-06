@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -7,7 +8,7 @@ import {
 import { CrudService } from 'src/common/crud.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
+import { User, UserRoleEnum } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Event } from 'src/event/entities/event.entity';
@@ -65,23 +66,50 @@ export class UserService extends CrudService<User> {
     });
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    const user = await this.findOne(id);
-
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+    user: User,
+  ): Promise<User> {
+    const userToUpdate = await this.findOne(id);
+    if (!this.isSameOrAdmin(userToUpdate, user)) {
+      throw new ForbiddenException(
+        'You need to be the same user or an admin to modify it this user !',
+      );
+    }
     const { name, email, password, bio, profilePicture } = updateUserDto;
 
-    user.name = name || user.name;
-    user.email = email || user.email;
-    user.password = password || user.password;
-    user.bio = bio || user.bio;
-    user.profilePicture = profilePicture || user.profilePicture;
+    userToUpdate.name = name || userToUpdate.name;
+    userToUpdate.email = email || userToUpdate.email;
+    userToUpdate.password = password || userToUpdate.password;
+    userToUpdate.bio = bio || userToUpdate.bio;
+    userToUpdate.profilePicture = profilePicture || userToUpdate.profilePicture;
 
-    return await this.userRepository.save(user);
+    return await this.userRepository.save(userToUpdate);
   }
 
   async addEventToAttendedEvents(user: User, event: Event): Promise<void> {
-    user.attendedEvents = user.attendedEvents;
+    user.attendedEvents = user.attendedEvents || [];
     user.attendedEvents.push(event);
     await this.userRepository.save(user);
+  }
+
+  async remove(id: string, user: User): Promise<void> {
+    const userToDelete = await this.findOne(id);
+    if (!this.isSameOrAdmin(userToDelete, user)) {
+      throw new ForbiddenException(
+        'You need to be the same user or an admin to delete it this user !',
+      );
+    }
+    await this.userRepository.softRemove(userToDelete);
+  }
+  isOwnerOrAdmin(event: Event, user: User): boolean {
+    return (
+      user.role === UserRoleEnum.admin ||
+      (event.organizer && event.organizer.id === user.id)
+    );
+  }
+  isSameOrAdmin(userToChange: User, user: User): boolean {
+    return user.role === UserRoleEnum.admin || userToChange.id === user.id;
   }
 }

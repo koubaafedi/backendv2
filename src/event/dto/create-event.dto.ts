@@ -18,6 +18,6 @@ export class CreateEventDto {
   @IsOptional()
   @IsUrl()
   picture: string;
-  @IsUUID()
-  organizerId: string;
+  // @IsUUID()
+  // organizerId: string;
 }
